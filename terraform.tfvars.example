@@ -1,0 +1,58 @@
+prefix = "abhire"
+redis_tar_file_location = "tar file location"
+
+# Project Configuration
+project_id         = "gcp project id"
+
+# Firewall Rules 
+tcp_ports          = ["22", "80", "443", "1968", "3000", "3333-3345", "3347-3350", "8000-8002", "8004", 
+                    "8006", "8070-8071", "8080", "8443-8444", "9080-9081", "9091", 
+                    "9125", "9443", "10000-19999", "20000-29999", "36379-36380"]
+udp_ports          = ["53", "5353"]
+
+create_test_vm = true
+
+############# Redis Cluster Configuration for primary #############
+cluster_name = "redis-poc2.dlqueue.com"
+cluster_admin_username = "admin@example.com"
+cluster_admin_password = "admin"
+
+create_dr_cluster     = true
+
+region             = "asia-south1"
+zone               = "asia-south1-a"
+zones               = ["asia-south1-a", "asia-south1-b", "asia-south1-c"]
+
+# VPC and Subnet Configuration
+subnet_cidr        = "10.0.2.0/24"
+
+# 4 CPU and 15360MB RAM
+machine_type       = "n2-standard-4"
+  
+# VM Details for Redis Cluster 
+disk_size          = 96
+disk_type          = "pd-balanced"
+image = "projects/rhel-cloud/global/images/rhel-9-v20250212"
+
+node_count_primary = 3
+
+external_pips = ["abhi-ipaddr1", "abhi-ipaddr2", "abhi-ipaddr3"]
+
+############# Redis Cluster Configuration for DR #############
+cluster_name_dr = "redis-poc2-dr.dlqueue.com"
+cluster_admin_username_dr = "admin@example.com"
+cluster_admin_password_dr = "admin"
+
+external_pips_dr = ["abhi-ipaddr-dr1"]
+
+node_count_dr       = 1
+machine_type_dr     = "n2-standard-4"
+disk_size_dr        = 96
+disk_type_dr        = "pd-balanced"
+image_dr           = "projects/rhel-cloud/global/images/rhel-9-v20250212"
+
+region_dr             = "asia-south2"
+zone_dr               = "asia-south2-a"
+zones_dr               = ["asia-south2-a", "asia-south2-b", "asia-south2-c"]
+
+subnet_cidr_dr        = "10.0.3.0/24"
