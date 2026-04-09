@@ -1,0 +1,16 @@
+# Ignore license.txt
+license.txt
+
+# Ignore all .zip files
+*.zip
+
+# Ignore all .gz files
+*.gz
+
+# Ignore Terraform status files
+.terraform*
+terraform.tfstate*
+terraform.tfvars.bak
+.tfvars
+*.tfvars
+/.idea
