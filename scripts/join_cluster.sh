@@ -39,6 +39,7 @@ install() {
 join_cluster() {
   retry_times=$1
   log_info "$logger" "Waiting for Master node to create Redis Cluster..."
+  
   while true; do
     resp=$(curl -s -k -u "${cluster_admin_username}:${cluster_admin_password}" "https://${first_node_internal_ip}:9443/v1/cluster/check")
     log_info "$logger" "Response: $resp"
@@ -80,7 +81,6 @@ log_info "$logger" "Redis Cluster Password: ${cluster_admin_password}"
 log_info "$logger" "First Node Internal IP: ${first_node_internal_ip}"
 log_info "$logger" "Node External IPs: ${node_external_ips}"
 log_info "$logger" "Redis Cluster FQDN: ${cluster_name}"
-log_info "$logger" "Create DR cluster : ${create_dr_cluster}"
 
 install 10
-join_cluster 10
+#join_cluster 10

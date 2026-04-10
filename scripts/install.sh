@@ -34,21 +34,6 @@ install() {
     fi
     sleep $retry_times
   done
-
-}
-
-create_cluster() {
-  log_info "$logger" "Creating Redis cluster..."
-  log_info "$logger" "sudo /opt/redislabs/bin/rladmin cluster create addr ${node_internal_ip} \
-      external_addr ${node_external_ips} \
-      name ${cluster_name} register_dns_suffix \
-      username ${cluster_admin_username} password '\"${cluster_admin_password}\"'"
-
-  output=$(sudo /opt/redislabs/bin/rladmin cluster create addr ${node_internal_ip} \
-    external_addr ${node_external_ips} \
-    name ${cluster_name} register_dns_suffix \
-    username ${cluster_admin_username} password ${cluster_admin_password} 2>&1)
-  log_info "$logger" "Create cluster output: $output"
 }
 
 readonly logger="/redis_install.log"
@@ -62,8 +47,6 @@ log_info() {
 log_info "$logger" "Redis cluster admin: ${cluster_admin_username}"
 log_info "$logger" "Redis cluster password: [REDACTED]"
 log_info "$logger" "Master node internal IP: ${node_internal_ip}"
-log_info "$logger" "Node external IPs: ${node_external_ips}"
-log_info "$logger" "Redis cluster FQDN: ${cluster_name}"
+log_info "$logger" "Tar file location: ${redis_tar_file_location}"
 
 install 10
-create_cluster 

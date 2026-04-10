@@ -175,3 +175,9 @@ variable "external_pips_dr" {
   type        = list(string)
   default     = []
 }
+
+variable "js_machine_type" {
+  description = "machine type to use for jump server"
+  type        = string
+  default     = "e2-medium"
+}
