@@ -13,7 +13,6 @@ provider "google" {
   region  = var.region
 }
 
-
 # VPC Configuration
 resource "google_compute_network" "vpc" {
   name                    = "${var.prefix}-vpc"
@@ -100,6 +99,13 @@ resource "google_compute_address" "internal_ips" {
   subnetwork   = google_compute_subnetwork.subnet.name
 }
 
+locals {
+  install_template_vars = {
+    redis_tar_file_location = var.redis_tar_file_location
+    cluster_admin_username  = var.cluster_admin_username
+    cluster_admin_password  = var.cluster_admin_password
+  }
+}
 
 # Virtual Machine Instances
 resource "google_compute_instance" "redis_vms" {
@@ -136,20 +142,11 @@ resource "google_compute_instance" "redis_vms" {
     "skip_deletion"   = "yes"
   }
 
-  # Metadata for Startup Scripts
   metadata = {
-    "startup-script" = templatefile(
-      "${path.module}/files/install.sh",
-      {
-        redis_tar_file_location = var.redis_tar_file_location,
-        cluster_admin_username = var.cluster_admin_username,
-        cluster_admin_password = var.cluster_admin_password,
-        #node_external_ips  = google_compute_address.static_ips[count.index].address,
-         # Uncomment the next line if you want to use the existing IPs 
-        #node_external_ips  = data.google_compute_address.static_ips[var.external_pips[count.index]].address,
-        node_internal_ip = google_compute_address.internal_ips[count.index].address,
-        #first_node_internal_ip = google_compute_address.internal_ips[0].address
-      }
+    "startup-script" = templatefile("${path.module}/files/install.sh",
+      merge(
+        local.install_template_vars, {node_internal_ip = google_compute_address.internal_ips[count.index].address}
+      )
     )
   }
 
@@ -178,11 +175,6 @@ resource "google_compute_instance" "jump_server" {
   network_interface {
     network    = google_compute_network.vpc.name
     subnetwork = google_compute_subnetwork.subnet.name
-    #network_ip = google_compute_address.internal_ips[0].address
-
-    # access_config {
-    #   nat_ip = google_compute_address.static_ips[0].address
-    # }
   }
 
   labels = {
@@ -214,9 +206,7 @@ resource "google_compute_instance" "jump_server" {
 
   # Hostname Configuration
   hostname = "${var.prefix}-js.${var.cluster_name}"
-
 }
-
 
 # Output VM Details
 output "vm_details" {

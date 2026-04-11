@@ -146,18 +146,12 @@ resource "google_compute_instance" "vm_instances_dr" {
   }
 
   metadata = {
-    "startup-script" = templatefile(
-      "${path.module}/files/install.sh",
-      {
-        redis_tar_file_location = var.redis_tar_file_location,
-        cluster_admin_username = var.cluster_admin_username,
-        cluster_admin_password = var.cluster_admin_password,
-        node_internal_ip = google_compute_address.internal_ips_dr[count.index].address
-      }
+    "startup-script" = templatefile("${path.module}/files/install.sh",
+      merge(
+        local.install_template_vars, {node_internal_ip = google_compute_address.internal_ips_dr[count.index].address}
+      )
     )
   }
-
-
 
   # Hostname Configuration
   hostname = "${var.prefix}-${count.index}.${var.cluster_name_dr}"
