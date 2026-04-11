@@ -4,4 +4,4 @@ agentsRule:
 instanceFilter:
   inclusionLabels:
   - labels:
-      goog-ops-agent-policy: v2-x86-template-1-4-0
+      goog-ops-agent-policy: v2-template-1-7-0

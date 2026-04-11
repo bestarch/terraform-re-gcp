@@ -4,18 +4,13 @@ install() {
   retry_times=$1
   log_info "$logger" "Installing Redis..." 
   sudo yum install wget dnsutils net-tools -y && \
-  sudo setenforce 0 && \
-  sudo sed -i 's/^SELINUX=.*/SELINUX=permissive/' /etc/selinux/config && \
   echo "net.ipv4.ip_local_port_range = 30000 65535" | sudo tee -a /etc/sysctl.conf && \
-  #echo "DNSStubListener=no" | sudo tee -a /etc/systemd/resolved.conf && \
-  #sudo mv /etc/resolv.conf /etc/resolv.conf.orig && \
-  #sudo ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf && \
-  #sudo service systemd-resolved restart && \
   sudo wget -O "/opt/redis_enterprise" "${redis_tar_file_location}" && \
   log_info "$logger" "Successfully downloaded Redis Enterprise Software package" && \
   sudo tar -xvf "/opt/redis_enterprise" -C /opt/ && \
   cd /opt && \
   sudo ./install.sh -y 
+  sleep 30
 
   log_info "$logger" "Checking node bootstrap status and address..." 
   log_info "$logger" "curl: https://${node_internal_ip}:9443/v1/bootstrap" 

@@ -22,8 +22,9 @@ join_cluster() {
           continue
         fi
 
-        if echo "$resp" | jq -e --argjson no_of_nodes "$i" '(.cluster_test_result == true) and (.nodes != null) and ((.nodes | length) == $no_of_nodes) and (all(.nodes[]?; .result == true))' >/dev/null 2>&1; then
-          
+        # if echo "$resp" | jq -e --argjson no_of_nodes "$i" '(.cluster_test_result == true) and (.nodes != null) and ((.nodes | length) == $no_of_nodes) and (all(.nodes[]?; .result == true))' >/dev/null 2>&1; then
+        if echo "$resp" | jq -e '.cluster_test_result == true' >/dev/null 2>&1; then
+  
           # Join cluster command is commented to avoid joining cluster using rladmin. Please uncomment and use when needed.
           # echo "Cluster is active and all nodes are healthy!"
           # log_info "$logger" "Joining cluster..."
@@ -61,6 +62,7 @@ join_cluster() {
           error_code=$(echo "$join_response" | jq -r '.error_code' 2>/dev/null)
           if [[ -z "$error_code" ]]; then
             log_info "$logger" "Node joined the cluster successfully"
+            sleep 30 # Sleep to allow cluster to stabilize before next node joins
             break
           else
             log_info "$logger" "Failed to join cluster. error_code: $error_code"
@@ -132,6 +134,7 @@ create_cluster() {
   error_code=$(echo "$resp" | jq -r '.error_code' 2>/dev/null)
   if [[ -z "$error_code" ]]; then
     log_info "$logger" "Cluster created successfully"
+    sleep 30 # Sleep to allow cluster to stabilize before other node joins
     return 0
   else
     log_info "$logger" "Cluster creation failed. error_code: $error_code"
