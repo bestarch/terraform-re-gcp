@@ -14,3 +14,4 @@ terraform.tfvars.bak
 .tfvars
 *.tfvars
 /.idea
+terraform.log
