@@ -8,7 +8,7 @@ join_cluster() {
   IFS=' ' read -r -a node_external_ips <<< "$3"
 
   log_info "$logger" "Waiting for Master node to create Redis Cluster..."
-  node_count=${no_of_nodes_per_cluster}
+  node_count=$4
   for ((i=1; i<node_count; i++)); do
      log_info "$logger" "Master node internal IP: $${node_internal_ips[0]}"
      log_info "$logger" "Joining cluster with Master node internal IP: $${node_internal_ips[0]} and external IP: $${node_external_ips[0]}"
@@ -156,32 +156,34 @@ node_internal_ips="${node_internal_ips_joined}"
 IFS=' ' read -r -a node_internal_ips <<< "$node_internal_ips"
 IFS=' ' read -r -a node_external_ips <<< "$node_external_ips"
 
-log_info "$logger" "Redis cluster admin: ${cluster_admin_username}"
-log_info "$logger" "Redis cluster password: ${cluster_admin_password}"
-log_info "$logger" "Redis cluster FQDN: ${cluster_name}"
+node_external_ips_dr="${node_external_ips_joined_dr}"
+node_internal_ips_dr="${node_internal_ips_joined_dr}"
+
+IFS=' ' read -r -a node_internal_ips_dr <<< "$node_internal_ips_dr"
+IFS=' ' read -r -a node_external_ips_dr <<< "$node_external_ips_dr"
+
+log_info "$logger" "Redis cluster admin credentials: ${cluster_admin_username}:${cluster_admin_password}"
+log_info "$logger" "Redis cluster primary FQDN: ${cluster_name}"
 log_info "$logger" "Create DR cluster: ${create_dr_cluster}"
-log_info "$logger" "Redis DR cluster FQDN: ${dr_cluster_name}"
 log_info "$logger" "Internal IP addresses: ${node_internal_ips_joined}"
 log_info "$logger" "External IP addresses: ${node_external_ips_joined}"
 
 log_info "$logger" "Internal IP Count: $${#node_internal_ips[@]}"
 log_info "$logger" "External IP Count: $${#node_external_ips[@]}"
-# log_info "$logger" "IP 1: $${node_internal_ips[0]}"
-# log_info "$logger" "IP 2: $${node_internal_ips[1]}"
-
-#log_info "$logger" "External IPs array: $${node_external_ips[@]}"
 
 log_info "$logger" "Primary cluster node count: ${no_of_nodes_per_cluster}"
-log_info "$logger" "DR cluster node count: ${no_of_dr_nodes_per_cluster}"
 
 
 configure_cluster() {
+
+  log_info "$logger" "Proceeding with primary cluster creation."
+
   if [ "${no_of_nodes_per_cluster}" -gt 1 ]; then
     log_info "$logger" "Multiple nodes per cluster requested."
     create_cluster $${node_internal_ips[0]} $${node_external_ips[0]}
     if [[ $? -eq 0 ]]; then
       log_info "$logger" "Cluster creation succeeded. Proceeding to join nodes."
-      join_cluster 10 "$${node_internal_ips[*]}" "$${node_external_ips[*]}"
+      join_cluster 10 "$${node_internal_ips[*]}" "$${node_external_ips[*]}" "${no_of_nodes_per_cluster}"
     else
       log_info "$logger" "Cluster creation failed. Aborting join operation."
       exit 1
@@ -195,6 +197,34 @@ configure_cluster() {
       log_info "$logger" "Single node cluster creation failed."
       exit 1
     fi
+  fi
+
+  if [ "${create_dr_cluster}" = "true" ]; then
+      log_info "$logger" "DR Cluster creation requested. DR Cluster FQDN: ${dr_cluster_name}"
+      log_info "$logger" "DR cluster node count: ${no_of_dr_nodes_per_cluster}"
+      log_info "$logger" "Redis DR cluster FQDN: ${dr_cluster_name}"
+
+      if [ "${no_of_dr_nodes_per_cluster}" -gt 1 ]; then
+        log_info "$logger" "Multiple nodes per cluster requested."
+        create_cluster $${node_internal_ips_dr[0]} $${node_external_ips_dr[0]}
+        if [[ $? -eq 0 ]]; then
+          log_info "$logger" "Cluster creation succeeded. Proceeding to join nodes."
+          join_cluster 10 "$${node_internal_ips_dr[*]}" "$${node_external_ips_dr[*]}" "${no_of_dr_nodes_per_cluster}"
+        else
+          log_info "$logger" "Cluster creation failed. Aborting join operation."
+          exit 1
+        fi
+      else
+        log_info "$logger" "Single node cluster requested. Creating cluster with single node."
+        create_cluster $${node_internal_ips_dr[0]} $${node_external_ips_dr[0]}
+        if [[ $? -eq 0 ]]; then
+          log_info "$logger" "Single node cluster created successfully."
+        else
+          log_info "$logger" "Single node cluster creation failed."
+          exit 1
+        fi
+      fi
+
   fi
 }
 

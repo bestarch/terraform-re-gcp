@@ -45,8 +45,7 @@ resource "google_compute_instance" "testvm" {
       "owner"        = var.owner
       "skip_deletion"   = "yes"
     }
-
-    metadata_startup_script = file("${path.module}/scripts/test_vm.sh")
+    metadata_startup_script = file("${path.module}/files/test_vm.sh")
 }
 
 

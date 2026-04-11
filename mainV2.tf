@@ -139,7 +139,7 @@ resource "google_compute_instance" "redis_vms" {
   # Metadata for Startup Scripts
   metadata = {
     "startup-script" = templatefile(
-      "${path.module}/scripts/install.sh",
+      "${path.module}/files/install.sh",
       {
         redis_tar_file_location = var.redis_tar_file_location,
         cluster_admin_username = var.cluster_admin_username,
@@ -160,7 +160,7 @@ resource "google_compute_instance" "redis_vms" {
 
 
 resource "google_compute_instance" "jump_server" {
-  depends_on = [ google_compute_instance.redis_vms ]
+  depends_on = [ google_compute_instance.redis_vms, google_compute_instance.vm_instances_dr ]
   name         = "${var.prefix}-vm-js"
   zone         = var.zones[0 % length(var.zones)]
   machine_type = var.js_machine_type 
@@ -191,10 +191,9 @@ resource "google_compute_instance" "jump_server" {
     "skip_deletion"   = "yes"
   }
 
-  # Metadata for Startup Scripts
   metadata = {
     "startup-script" = templatefile(
-      "${path.module}/scripts/configure.sh",
+      "${path.module}/files/configure.sh",
       {
         cluster_admin_username = var.cluster_admin_username,
         cluster_admin_password = var.cluster_admin_password,
@@ -204,12 +203,10 @@ resource "google_compute_instance" "jump_server" {
         cluster_name = var.cluster_name,
         dr_cluster_name = var.cluster_name_dr,
         node_external_ips_joined  = join(" ", google_compute_instance.redis_vms[*].network_interface[0].access_config[0].nat_ip),
-         # Uncomment the next line if you want to use the existing IPs 
-        #node_external_ips  = join(" ", data.google_compute_address.static_ips[var.external_pips[*]].address),
         node_internal_ips_joined = join(" ", google_compute_instance.redis_vms[*].network_interface[0].network_ip)
 
-        #node_external_ips_joined = join(" ", google_compute_address.static_ips[*].address),
-        #node_internal_ips_joined = join(" ", google_compute_address.static_ips[*].address)
+        node_external_ips_joined_dr  = join(" ", google_compute_instance.vm_instances_dr[*].network_interface[0].access_config[0].nat_ip),
+        node_internal_ips_joined_dr = join(" ", google_compute_instance.vm_instances_dr[*].network_interface[0].network_ip)
         
       }
     )
@@ -234,14 +231,6 @@ output "vm_details" {
     }
   )
 }
-
-#  output "node_ips2" {
-#    value = google_compute_instance.redis_vms[*].network_interface[0].network_ip
-# }
-
-#  output "node_ips3" {
-#    value = google_compute_instance.redis_vms[*].network_interface[0].access_config[0].nat_ip
-# }
 
 output "node_ips" {
   value = { for k, v in google_compute_address.static_ips : k => v.address }

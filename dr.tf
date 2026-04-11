@@ -145,24 +145,19 @@ resource "google_compute_instance" "vm_instances_dr" {
     "skip_deletion"   = "yes"
   }
 
-  # Metadata for Startup Scripts
   metadata = {
     "startup-script" = templatefile(
-      "${path.module}/${count.index == 0 ? "/scripts/create_cluster.sh" : "/scripts/join_cluster.sh"}",
+      "${path.module}/files/install.sh",
       {
         redis_tar_file_location = var.redis_tar_file_location,
-        cluster_admin_username = var.cluster_admin_username_dr,
-        cluster_admin_password = var.cluster_admin_password_dr,
-        create_dr_cluster = var.create_dr_cluster,
-        cluster_name = var.cluster_name_dr,
-        node_external_ips  = google_compute_address.static_ips_dr[count.index].address,
-        # Uncomment the next line if you want to use the existing IPs 
-        #node_external_ips  = data.google_compute_address.static_ips_dr[var.external_pips_dr[count.index]].address,
-        node_internal_ip = google_compute_address.internal_ips_dr[count.index].address,
-        first_node_internal_ip = google_compute_address.internal_ips_dr[0].address
+        cluster_admin_username = var.cluster_admin_username,
+        cluster_admin_password = var.cluster_admin_password,
+        node_internal_ip = google_compute_address.internal_ips_dr[count.index].address
       }
     )
   }
+
+
 
   # Hostname Configuration
   hostname = "${var.prefix}-${count.index}.${var.cluster_name_dr}"
