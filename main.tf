@@ -186,21 +186,18 @@ resource "google_compute_instance" "jump_server" {
   metadata = {
     "startup-script" = templatefile(
       "${path.module}/files/configure.sh",
-      {
-        cluster_admin_username = var.cluster_admin_username,
-        cluster_admin_password = var.cluster_admin_password,
+      merge(
+        local.install_template_vars, {
         no_of_nodes_per_cluster = var.node_count_primary,
         no_of_dr_nodes_per_cluster = var.node_count_dr,
         create_dr_cluster = var.create_dr_cluster,
         cluster_name = var.cluster_name,
         dr_cluster_name = var.cluster_name_dr,
         node_external_ips_joined  = join(" ", google_compute_instance.redis_vms[*].network_interface[0].access_config[0].nat_ip),
-        node_internal_ips_joined = join(" ", google_compute_instance.redis_vms[*].network_interface[0].network_ip)
-
+        node_internal_ips_joined = join(" ", google_compute_instance.redis_vms[*].network_interface[0].network_ip),
         node_external_ips_joined_dr  = join(" ", google_compute_instance.vm_instances_dr[*].network_interface[0].access_config[0].nat_ip),
         node_internal_ips_joined_dr = join(" ", google_compute_instance.vm_instances_dr[*].network_interface[0].network_ip)
-        
-      }
+      })
     )
   }
 

@@ -31,7 +31,7 @@ install() {
   done
 }
 
-readonly logger="/redis_install.log"
+readonly logger="/redis.log"
 
 log_info() {
   local file="$1"

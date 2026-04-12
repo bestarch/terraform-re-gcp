@@ -1,6 +1,6 @@
 #!/bin/bash
 
-join_cluster() {
+join() {
   retry_times=$1
   # node_internal_ips=($2)
   # node_external_ips=($3)
@@ -81,7 +81,7 @@ join_cluster() {
 
 }
 
-create_cluster() {
+create() {
   local node_internal_ip=$1
   local node_external_ip=$2
 
@@ -142,7 +142,7 @@ create_cluster() {
   fi
 }
 
-readonly logger="/redis_install.log"
+readonly logger="/redis.log"
 
 log_info() {
   local file="$1"
@@ -180,17 +180,17 @@ configure_cluster() {
 
   if [ "${no_of_nodes_per_cluster}" -gt 1 ]; then
     log_info "$logger" "Multiple nodes per cluster requested."
-    create_cluster $${node_internal_ips[0]} $${node_external_ips[0]}
+    create $${node_internal_ips[0]} $${node_external_ips[0]}
     if [[ $? -eq 0 ]]; then
       log_info "$logger" "Cluster creation succeeded. Proceeding to join nodes."
-      join_cluster 10 "$${node_internal_ips[*]}" "$${node_external_ips[*]}" "${no_of_nodes_per_cluster}"
+      join 10 "$${node_internal_ips[*]}" "$${node_external_ips[*]}" "${no_of_nodes_per_cluster}"
     else
       log_info "$logger" "Cluster creation failed. Aborting join operation."
       exit 1
     fi
   else
     log_info "$logger" "Single node cluster requested. Creating cluster with single node."
-    create_cluster $${node_internal_ips[0]} $${node_external_ips[0]}
+    create $${node_internal_ips[0]} $${node_external_ips[0]}
     if [[ $? -eq 0 ]]; then
       log_info "$logger" "Single node cluster created successfully."
     else
@@ -206,17 +206,17 @@ configure_cluster() {
 
       if [ "${no_of_dr_nodes_per_cluster}" -gt 1 ]; then
         log_info "$logger" "Multiple nodes per cluster requested."
-        create_cluster $${node_internal_ips_dr[0]} $${node_external_ips_dr[0]}
+        create $${node_internal_ips_dr[0]} $${node_external_ips_dr[0]}
         if [[ $? -eq 0 ]]; then
           log_info "$logger" "Cluster creation succeeded. Proceeding to join nodes."
-          join_cluster 10 "$${node_internal_ips_dr[*]}" "$${node_external_ips_dr[*]}" "${no_of_dr_nodes_per_cluster}"
+          join 10 "$${node_internal_ips_dr[*]}" "$${node_external_ips_dr[*]}" "${no_of_dr_nodes_per_cluster}"
         else
           log_info "$logger" "Cluster creation failed. Aborting join operation."
           exit 1
         fi
       else
         log_info "$logger" "Single node cluster requested. Creating cluster with single node."
-        create_cluster $${node_internal_ips_dr[0]} $${node_external_ips_dr[0]}
+        create $${node_internal_ips_dr[0]} $${node_external_ips_dr[0]}
         if [[ $? -eq 0 ]]; then
           log_info "$logger" "Single node cluster created successfully."
         else
