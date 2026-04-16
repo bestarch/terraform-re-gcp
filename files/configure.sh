@@ -84,6 +84,7 @@ join() {
 create() {
   local node_internal_ip=$1
   local node_external_ip=$2
+  local cluster_name=$3
 
   log_info "$logger" "Checking node bootstrap status and address..." 
   log_info "$logger" "curl: https://$${node_internal_ip}:9443/v1/bootstrap" 
@@ -107,12 +108,12 @@ create() {
   # Create cluster command is commented to avoid cluster creation using rladmin. Please uncomment and use when needed.
   # log_info "$logger" "sudo /opt/redislabs/bin/rladmin cluster create addr $${node_internal_ip} \
   #     external_addr $${node_external_ip} \
-  #     name ${cluster_name} register_dns_suffix \
+  #     name $${cluster_name} register_dns_suffix \
   #     username ${cluster_admin_username} password '\"${cluster_admin_password}\"'"
 
   # output=$(sudo /opt/redislabs/bin/rladmin cluster create addr $${node_internal_ip} \
   #   external_addr $${node_external_ip} \
-  #   name ${cluster_name} register_dns_suffix \
+  #   name $${cluster_name} register_dns_suffix \
   #   username ${cluster_admin_username} password ${cluster_admin_password} 2>&1)
   # log_info "$logger" "Create cluster output: $output"
 
@@ -121,13 +122,13 @@ create() {
   -H \"Content-Type: application/json\" \
   -H \"Accept: application/json\" \
   -X POST https://$${node_internal_ip}:9443/v1/bootstrap/create_cluster \
-  -d '{\"action\": \"create_cluster\", \"cluster\": {\"nodes\": [], \"name\": \"${cluster_name}\"}, \"node\": {\"identity\": {\"addr\": \"$${node_internal_ip}\", \"external_addr\": [\"$${node_external_ip}\"]}}, \"credentials\": {\"username\": \"${cluster_admin_username}\", \"password\": \"${cluster_admin_password}\"}}'" 
+  -d '{\"action\": \"create_cluster\", \"cluster\": {\"nodes\": [], \"name\": \"$${cluster_name}\"}, \"node\": {\"identity\": {\"addr\": \"$${node_internal_ip}\", \"external_addr\": [\"$${node_external_ip}\"]}}, \"credentials\": {\"username\": \"${cluster_admin_username}\", \"password\": \"${cluster_admin_password}\"}}'" 
   
   resp=$(curl -s -k -u "${cluster_admin_username}:${cluster_admin_password}" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json" \
   -X POST "https://$${node_internal_ip}:9443/v1/bootstrap/create_cluster" \
-  -d '{"action":"create_cluster","cluster":{"nodes":[],"name":"'"${cluster_name}"'"},"node":{"identity":{"addr":"'"$${node_internal_ip}"'","external_addr":["'"$${node_external_ip}"'"]}},"credentials":{"username":"'"${cluster_admin_username}"'","password":"'"${cluster_admin_password}"'"}}')
+  -d '{"action":"create_cluster","cluster":{"nodes":[],"name":"'"$${cluster_name}"'"},"node":{"identity":{"addr":"'"$${node_internal_ip}"'","external_addr":["'"$${node_external_ip}"'"]}},"credentials":{"username":"'"${cluster_admin_username}"'","password":"'"${cluster_admin_password}"'"}}')
   
   log_info "$logger" "Create cluster response: $resp"
 
@@ -180,7 +181,7 @@ configure_cluster() {
 
   if [ "${no_of_nodes_per_cluster}" -gt 1 ]; then
     log_info "$logger" "Multiple nodes per cluster requested."
-    create $${node_internal_ips[0]} $${node_external_ips[0]}
+    create $${node_internal_ips[0]} $${node_external_ips[0]} ${cluster_name}
     if [[ $? -eq 0 ]]; then
       log_info "$logger" "Cluster creation succeeded. Proceeding to join nodes."
       join 10 "$${node_internal_ips[*]}" "$${node_external_ips[*]}" "${no_of_nodes_per_cluster}"
@@ -190,7 +191,7 @@ configure_cluster() {
     fi
   else
     log_info "$logger" "Single node cluster requested. Creating cluster with single node."
-    create $${node_internal_ips[0]} $${node_external_ips[0]}
+    create $${node_internal_ips[0]} $${node_external_ips[0]} ${cluster_name}
     if [[ $? -eq 0 ]]; then
       log_info "$logger" "Single node cluster created successfully."
     else
@@ -206,7 +207,7 @@ configure_cluster() {
 
       if [ "${no_of_dr_nodes_per_cluster}" -gt 1 ]; then
         log_info "$logger" "Multiple nodes per cluster requested."
-        create $${node_internal_ips_dr[0]} $${node_external_ips_dr[0]}
+        create $${node_internal_ips_dr[0]} $${node_external_ips_dr[0]} ${dr_cluster_name}
         if [[ $? -eq 0 ]]; then
           log_info "$logger" "Cluster creation succeeded. Proceeding to join nodes."
           join 10 "$${node_internal_ips_dr[*]}" "$${node_external_ips_dr[*]}" "${no_of_dr_nodes_per_cluster}"
@@ -216,7 +217,7 @@ configure_cluster() {
         fi
       else
         log_info "$logger" "Single node cluster requested. Creating cluster with single node."
-        create $${node_internal_ips_dr[0]} $${node_external_ips_dr[0]}
+        create $${node_internal_ips_dr[0]} $${node_external_ips_dr[0]} ${dr_cluster_name}
         if [[ $? -eq 0 ]]; then
           log_info "$logger" "Single node cluster created successfully."
         else
