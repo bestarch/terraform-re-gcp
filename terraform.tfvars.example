@@ -10,14 +10,14 @@ tcp_ports          = ["22", "80", "443", "1968", "3000", "3333-3345", "3347-3350
                     "9125", "9443", "10000-19999", "20000-29999", "36379-36380"]
 udp_ports          = ["53", "5353"]
 
-create_test_vm = true
+create_test_vm = false
 
 ############# Redis Cluster Configuration for primary #############
 cluster_name = "redis-poc2.dlqueue.com"
 cluster_admin_username = "admin@example.com"
 cluster_admin_password = "admin"
 
-create_dr_cluster     = true
+create_dr_cluster     = false
 
 region             = "asia-south1"
 zone               = "asia-south1-a"
